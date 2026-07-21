@@ -1,3 +1,4 @@
+-- 경로: "C:\Users\sierra\AppData\Local\nvim\init.lua"
 -- ==========================================================================
 -- 1. 네오빔 기본 설정
 -- ==========================================================================
@@ -213,5 +214,58 @@ vim.keymap.set("n", "L", ":BufferLineCycleNext<CR>", { silent = true })
 vim.keymap.set("n", "<M-h>", ":BufferLineMovePrev<CR>", { silent = true })
 vim.keymap.set("n", "<M-l>", ":BufferLineMoveNext<CR>", { silent = true })
 
--- 스페이스바 + q : 현재 열려있는 파일 탭 강제 닫기 
-vim.keymap.set("n", "<leader>q", ":bdelete!<CR>", { silent = true })
+-- [수정 후] 안전한 탭 닫기 (Neo-tree 및 마지막 탭 종료 방지 처리)
+vim.keymap.set("n", "<leader>q", function()
+    local bd = function(buf)
+        buf = buf or vim.api.nvim_get_current_buf()
+        -- 현재 열린 일반 파일 버퍼(buflisted) 목록 추출
+        local buffers = vim.tbl_filter(function(b)
+            return vim.api.nvim_buf_is_valid(b)
+               and vim.bo[b].buflisted
+               and vim.bo[b].buftype == ""
+        end, vim.api.nvim_list_bufs())
+
+        -- 만약 유효한 파일 버퍼가 1개 이하로 남아있다면
+        if #buffers <= 1 then
+            vim.cmd("enew") -- 새 빈 버퍼 생성 후
+            vim.cmd("bdelete! " .. buf) -- 이전 버퍼 삭제
+        else
+            -- 탭이 여러 개면 다음 버퍼로 미리 이동 후 삭제 (창 꺼짐 방지)
+            vim.cmd("BufferLineCycleNext")
+            vim.cmd("bdelete! " .. buf)
+        end
+    end
+
+    -- 현재 커서가 Neo-tree 사이드바에 있다면 파일 편집창으로 포커스 이동 후 닫기
+    if vim.bo.filetype == "neo-tree" then
+        vim.cmd("wincmd l")
+    end
+
+    bd()
+end, { silent = true })
+-----------------------------------------------------------------------------------------------
+-- Normal 모드에서 Tab 키로 코드 창 <-> Neo-tree 파일 트리 포커스 전환
+vim.keymap.set("n", "<Tab>", function()
+    if vim.bo.filetype == "neo-tree" then
+        -- 커서가 Neo-tree에 있으면 이전(오른쪽) 코드 창으로 포커스 이동
+        vim.cmd("wincmd p")
+    else
+        -- 커서가 코드 창에 있으면 Neo-tree가 열려있는지 확인 후 포커스 이동
+        local neo_tree_win = nil
+        for _, win in ipairs(vim.api.nvim_list_wins()) do
+            local buf = vim.api.nvim_win_get_buf(win)
+            if vim.bo[buf].filetype == "neo-tree" then
+                neo_tree_win = win
+                break
+            end
+        end
+
+        if neo_tree_win then
+            -- Neo-tree 창이 열려있다면 그 창으로 포커스 이동
+            vim.api.nvim_set_current_win(neo_tree_win)
+        else
+            -- Neo-tree 창이 닫혀있다면 강제로 열면서 포커스 이동
+            vim.cmd("Neotree focus left")
+        end
+    end
+end, { silent = true })
