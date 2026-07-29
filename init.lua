@@ -1,5 +1,4 @@
 -- 경로: "C:\Users\sierra\AppData\Local\nvim\init.lua"
---        ~/.config/nvim/init.lua
 -- ==========================================================================
 -- 1. 네오빔 기본 설정
 -- ==========================================================================
@@ -34,13 +33,24 @@ vim.opt.rtp:prepend(lazypath)
 -- ==========================================================================
 require("lazy").setup({
 
-    -- Nvimgelion 컬러스킴 테마 플러그인
+    -- GitHub 다크 테마 플러그인 (VS Code 스타일)
     {
-        "nyngwang/nvimgelion",
+        "projekt0n/github-nvim-theme",
+        name = "github-theme",
         lazy = false,
         priority = 1000,
         config = function()
-            vim.cmd("colorscheme nvimgelion")
+            require("github-theme").setup({
+                options = {
+                    transparent = false,
+                    styles = {
+                        comments = "italic",
+                        keywords = "bold",
+                    },
+                },
+            })
+            -- github_dark (기본 다크), github_dark_dimmed (밝기가 낮춰진 다크), github_dark_high_contrast 중 선택 가능
+            vim.cmd("colorscheme github_dark_high_contrast")
         end,
     },
 
@@ -55,7 +65,7 @@ require("lazy").setup({
                 auto_save_enabled = true,    
                 
                 -- 그냥 nvim을 켰을 때도 마지막으로 작업하던 프로젝트 폴더를 찾아 자동 복원하도록 타겟 설정
-                auto_session_enable_last_session = true, 
+                auto_session_enable_last_session = false, 
                 
                 pre_save_cmds = { "Neotree close" }, 
                 post_restore_cmds = { "Neotree show" },
@@ -244,7 +254,7 @@ vim.keymap.set("n", "<leader>q", function()
 
     bd()
 end, { silent = true })
------------------------------------------------------------------------------------------------
+
 -- Normal 모드에서 Tab 키로 코드 창 <-> Neo-tree 파일 트리 포커스 전환
 vim.keymap.set("n", "<Tab>", function()
     if vim.bo.filetype == "neo-tree" then
