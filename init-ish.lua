@@ -258,4 +258,4 @@ vim.keymap.set("n", "<Tab>", function()
             vim.cmd("Neotree focus left")
         end
     end
-end, { silent = true })
+end, { silent = true }
