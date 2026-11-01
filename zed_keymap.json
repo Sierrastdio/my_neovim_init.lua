@@ -1,0 +1,54 @@
+[
+  {
+    // 인서트 모드에서 jk, kj를 누르면 노멀 모드로 탈출
+    "context": "Editor && vim_mode == insert",
+    "bindings": {
+      "j k": "vim::NormalBefore",
+      "k j": "vim::NormalBefore"
+    }
+  },
+  {
+    // 노멀 모드 및 일반 에디터 구역
+    "context": "VimControl && !insert",
+    "bindings": {
+      // H, L 단어 이동
+      "H": "vim::PreviousWordStart",
+      "L": "vim::NextWordStart",
+
+      // 콜론(:) 및 세미콜론(;) 누르면 명령어 입력창 열기
+      ";": "command_palette::Toggle",
+      ":": "command_palette::Toggle",
+
+      // Undo / Redo
+      "u": "vim::Undo",
+      "r": "vim::Redo",
+
+      // 탭 전환 (Ctrl + h / Ctrl + l)
+      "ctrl-h": "pane::ActivatePreviousItem",
+      "ctrl-l": "pane::ActivateNextItem",
+
+      // 현재 탭 순서 변경 (Alt + h / Alt + l)
+      "alt-h": "pane::SwapItemLeft",
+      "alt-l": "pane::SwapItemRight",
+
+      // Tab 키: 에디터 버퍼에 있을 때 파일 트리(Project Panel)로 포커스 이동
+      "tab": "project_panel::ToggleFocus"
+    }
+  },
+  {
+    // 파일 트리(Project Panel)에 포커스가 있을 때 Tab을 누르면 중앙 에디터로 포커스 복귀
+    "context": "ProjectPanel",
+    "bindings": {
+      "tab": "workspace::FocusCenterPane"
+    }
+  },
+  {
+    // 터미널 구역 탈출 설정
+    "context": "Terminal",
+    "bindings": {
+      "j k": "terminal::ToggleViMode",
+      "k j": "terminal::ToggleViMode",
+      "escape": "terminal::ToggleViMode"
+    }
+  }
+]
