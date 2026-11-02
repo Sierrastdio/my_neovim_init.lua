@@ -1,15 +1,17 @@
--- 경로: "C:\Users\sierra\AppData\Local\nvim\init.lua"
 -- ==========================================================================
 -- 1. 네오빔 기본 설정
 -- ==========================================================================
-vim.g.mapleader = " "           -- 리더키(스페이스바) 설정을 최상단으로 이동 (필수)
+vim.g.mapleader = " "              -- 리더키(스페이스바) 설정
 
 vim.opt.termguicolors = true
 vim.opt.number = true
 vim.opt.tabstop = 4
 vim.opt.shiftwidth = 4
 vim.opt.expandtab = true
-vim.opt.mouse = "a"             -- 마우스 조작 활성화
+vim.opt.mouse = "a"                -- 마우스 조작 활성화
+
+-- 터미널 실행 시 PowerShell을 기본 쉘로 강제 지정
+vim.opt.shell = "powershell"
 
 -- ==========================================================================
 -- 2. lazy.nvim 자동 설치 (윈도우 경로 호환성 보정 완료)
@@ -49,7 +51,6 @@ require("lazy").setup({
                     },
                 },
             })
-            -- github_dark (기본 다크), github_dark_dimmed (밝기가 낮춰진 다크), github_dark_high_contrast 중 선택 가능
             vim.cmd("colorscheme github_dark_high_contrast")
         end,
     },
@@ -61,13 +62,10 @@ require("lazy").setup({
         config = function()
             require("auto-session").setup({
                 log_level = "error",
-                auto_restore_enabled = true, 
-                auto_save_enabled = true,    
-                
-                -- 그냥 nvim을 켰을 때도 마지막으로 작업하던 프로젝트 폴더를 찾아 자동 복원하도록 타겟 설정
-                auto_session_enable_last_session = false, 
-                
-                pre_save_cmds = { "Neotree close" }, 
+                auto_restore_enabled = true,
+                auto_save_enabled = true,
+                auto_session_enable_last_session = false,
+                pre_save_cmds = { "Neotree close" },
                 post_restore_cmds = { "Neotree show" },
             })
         end
@@ -142,14 +140,15 @@ require("lazy").setup({
     {
         "akinsho/bufferline.nvim",
         version = "*",
+        dependencies = { "projekt0n/github-nvim-theme" },
         config = function()
             require("bufferline").setup({
                 options = {
                     mode = "buffers",
                     numbers = "none",
-                    show_buffer_icons = false,       
-                    show_buffer_close_icons = false, 
-                    show_close_icon = false,         
+                    show_buffer_icons = false,
+                    show_buffer_close_icons = false,
+                    show_close_icon = false,
                     close_command = "bdelete! %d",
                     right_mouse_command = "bdelete! %d",
                     separator_style = "thin",
@@ -164,8 +163,8 @@ require("lazy").setup({
                 },
                 highlights = {
                     buffer_selected = {
-                        fg = "#ffffff",          
-                        bg = "#1e40af",          
+                        fg = "#ffffff",
+                        bg = "#1e40af",
                         bold = true,
                     },
                     indicator_selected = {
@@ -200,11 +199,10 @@ require("lazy").setup({
 })
 
 -- ==========================================================================
--- 4. 네오빔 시작 시 파일 트리 강제 실행 자동화 스크립트 (어디서 켜든 자동 시작 보장)
+-- 4. 네오빔 시작 시 파일 트리 강제 실행 자동화 스크립트
 -- ==========================================================================
 vim.api.nvim_create_autocmd("VimEnter", {
     callback = function()
-        -- 세션 복원이 이루어지지 않은 일반 빈 화면인 경우 좌측 파일 트리를 무조건 오픈
         if vim.fn.argc() == 0 then
             vim.cmd("Neotree show")
         end
@@ -212,56 +210,61 @@ vim.api.nvim_create_autocmd("VimEnter", {
 })
 
 -- ==========================================================================
--- 5. VS Code 스타일 조작 및 탭 관리 단축키 매핑
+-- 5. 키맵핑 설정 (원래 설정 보존 + H/L 위치 전환 적용)
 -- ==========================================================================
+
+-- 입력 모드 탈출: jk 및 kj 모두 Esc로 작동
+vim.keymap.set("i", "jk", "<Esc>", { silent = true })
+vim.keymap.set("i", "kj", "<Esc>", { silent = true })
+
+-- 노멀 모드에서 ';' 만 눌러도 곧바로 명령어 입력(':') 창이 열리도록 설정
+vim.keymap.set("n", ";", ":", { silent = false })
+
+-- 노멀 모드에서 컨트롤 Z (언도) -> u, 다시 앞으로 가기 (레도) -> r
+vim.keymap.set("n", "u", "u", { silent = true })
+vim.keymap.set("n", "r", "<C-r>", { silent = true })
+
+-- 1) 원래 탭 전환이었던 기능을 Ctrl + h, Ctrl + l 로 이동
+vim.keymap.set("n", "<C-h>", ":BufferLineCyclePrev<CR>", { silent = true })
+vim.keymap.set("n", "<C-l>", ":BufferLineCycleNext<CR>", { silent = true })
+
+-- 2) 기존 탭 전환 자리였던 대문자 H, L (Shift + h, l) 자리에 단어 맨 앞 기준 단어 이동(b, w) 배치
+vim.keymap.set("n", "H", "b", { silent = true })
+vim.keymap.set("n", "L", "w", { silent = true })
+
 -- 스페이스바 + e : 좌측 폴더 트리 사이드바 토글
 vim.keymap.set("n", "<leader>e", ":Neotree toggle left<CR>", { silent = true })
 
--- 대문자 H / L (Shift + h/l) : 왼쪽 / 오른쪽 파일 탭으로 포커스 이동
-vim.keymap.set("n", "H", ":BufferLineCyclePrev<CR>", { silent = true })
-vim.keymap.set("n", "L", ":BufferLineCycleNext<CR>", { silent = true })
-
--- Alt + h / Alt + l : 현재 파일 탭 위치를 왼쪽 / 오른쪽으로 이동 (순서 변경)
-vim.keymap.set("n", "<M-h>", ":BufferLineMovePrev<CR>", { silent = true })
-vim.keymap.set("n", "<M-l>", ":BufferLineMoveNext<CR>", { silent = true })
-
--- [수정 후] 안전한 탭 닫기 (Neo-tree 및 마지막 탭 종료 방지 처리)
+-- 안전한 탭 닫기
 vim.keymap.set("n", "<leader>q", function()
     local bd = function(buf)
         buf = buf or vim.api.nvim_get_current_buf()
-        -- 현재 열린 일반 파일 버퍼(buflisted) 목록 추출
         local buffers = vim.tbl_filter(function(b)
             return vim.api.nvim_buf_is_valid(b)
-               and vim.bo[b].buflisted
-               and vim.bo[b].buftype == ""
+            and vim.bo[b].buflisted
+            and vim.bo[b].buftype == ""
         end, vim.api.nvim_list_bufs())
 
-        -- 만약 유효한 파일 버퍼가 1개 이하로 남아있다면
         if #buffers <= 1 then
-            vim.cmd("enew") -- 새 빈 버퍼 생성 후
-            vim.cmd("bdelete! " .. buf) -- 이전 버퍼 삭제
+            vim.cmd("enew")
+            vim.cmd("bdelete! " .. buf)
         else
-            -- 탭이 여러 개면 다음 버퍼로 미리 이동 후 삭제 (창 꺼짐 방지)
             vim.cmd("BufferLineCycleNext")
             vim.cmd("bdelete! " .. buf)
         end
     end
 
-    -- 현재 커서가 Neo-tree 사이드바에 있다면 파일 편집창으로 포커스 이동 후 닫기
     if vim.bo.filetype == "neo-tree" then
         vim.cmd("wincmd l")
     end
-
     bd()
 end, { silent = true })
 
 -- Normal 모드에서 Tab 키로 코드 창 <-> Neo-tree 파일 트리 포커스 전환
 vim.keymap.set("n", "<Tab>", function()
     if vim.bo.filetype == "neo-tree" then
-        -- 커서가 Neo-tree에 있으면 이전(오른쪽) 코드 창으로 포커스 이동
         vim.cmd("wincmd p")
     else
-        -- 커서가 코드 창에 있으면 Neo-tree가 열려있는지 확인 후 포커스 이동
         local neo_tree_win = nil
         for _, win in ipairs(vim.api.nvim_list_wins()) do
             local buf = vim.api.nvim_win_get_buf(win)
@@ -272,11 +275,42 @@ vim.keymap.set("n", "<Tab>", function()
         end
 
         if neo_tree_win then
-            -- Neo-tree 창이 열려있다면 그 창으로 포커스 이동
             vim.api.nvim_set_current_win(neo_tree_win)
         else
-            -- Neo-tree 창이 닫혀있다면 강제로 열면서 포커스 이동
             vim.cmd("Neotree focus left")
         end
     end
 end, { silent = true })
+
+-- ==========================================================================
+-- 대문자 T (Shift + t) : 현재 파일 경로에서 새 탭에 터미널 실행 (Windows 호환)
+-- ==========================================================================
+vim.keymap.set("n", "T", function()
+    local current_dir = vim.fn.expand("%:p:h")
+    if current_dir == "" then
+        current_dir = vim.fn.getcwd()
+    end
+    vim.cmd("tabnew")
+    vim.cmd("lcd " .. vim.fn.fnameescape(current_dir))
+    vim.cmd("terminal")
+    vim.cmd("startinsert")
+end, { silent = true })
+
+-- ==========================================================================
+-- Alt + h / Alt + l : 현재 탭의 위치를 왼쪽/오른쪽으로 이동 (순서 변경)
+-- ==========================================================================
+vim.keymap.set("n", "<M-h>", ":BufferLineMovePrev<CR>", { silent = true })
+vim.keymap.set("n", "<M-l>", ":BufferLineMoveNext<CR>", { silent = true })
+
+-- ==========================================================================
+-- 터미널 모드(Terminal mode) 전용 탈출 및 조작 설정
+-- ==========================================================================
+vim.keymap.set("t", "jk", [[<C-\><C-n>]], { silent = true })
+vim.keymap.set("t", "kj", [[<C-\><C-n>]], { silent = true })
+vim.keymap.set("t", "<Esc>", [[<C-\><C-n>]], { silent = true })
+vim.keymap.set("t", "<C-l>", "<C-l>", { silent = true })
+
+-- ==========================================================================
+-- 6. 클립보드 연동 설정 (Windows 네이티브 클립보드)
+-- ==========================================================================
+vim.opt.clipboard = "unnamedplus"
